@@ -5,6 +5,10 @@ from fastapi.encoders import jsonable_encoder
 from starlette.middleware.cors import CORSMiddleware
 from db import DBSession, ImageDB
 from download_images import download_images as download_images_on_disk
+from explore_images import (
+    next_image_in_album,
+    get_first_image_in_album as get_first_image_in_album_from_db,
+)
 from settings import settings
 
 app = FastAPI(
@@ -52,6 +56,91 @@ def print_images():
     with DBSession() as session:
         return jsonable_encoder(
             session.query(ImageDB).all()
+        )
+
+
+@app.get(
+    path='/api/get_first_image_in_album',
+    description='Возвращает первое изображение из альбома',
+    tags=['20'],
+)
+def get_first_image_in_album(
+    album_id: int = Query(281940823, description='ID альбома'),
+) -> dict:
+    id = get_first_image_in_album_from_db(album_id)
+
+    if id is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Такого альбома нет в базе. Возможно, вам нужно его загрузить.'
+        )
+
+    with DBSession() as session:
+        return jsonable_encoder(
+            session
+            .query(ImageDB)
+            .where(ImageDB.id == id)
+            .first()
+        )
+
+
+@app.get(
+    path='/api/like_image',
+    description='Лайкает изображение и возвращает следующее изображение в альбоме (циклически)',
+    tags=['20'],
+)
+def like_image(
+    id: int
+) -> dict:
+    next_id = next_image_in_album(id)
+
+    if next_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Такого изображения нет в базе.'
+        )
+
+    with DBSession() as session:
+        image: ImageDB = (
+            session
+            .query(ImageDB)
+            .where(ImageDB.id == id)
+            .first()
+        )
+        image.likes_count += 1
+        session.flush()
+        session.commit()
+
+        return jsonable_encoder(
+            session
+            .query(ImageDB)
+            .where(ImageDB.id == next_id)
+            .first()
+        )
+
+
+@app.get(
+    path='/api/skip_image',
+    description='Возвращает следующее изображение в альбоме (циклически)',
+    tags=['20'],
+)
+def skip_image(
+    id: int
+) -> dict:
+    next_id = next_image_in_album(id)
+
+    if next_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Такого изображения нет в базе.'
+        )
+
+    with DBSession() as session:
+        return jsonable_encoder(
+            session
+            .query(ImageDB)
+            .where(ImageDB.id == next_id)
+            .first()
         )
 
 

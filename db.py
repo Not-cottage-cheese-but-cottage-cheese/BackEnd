@@ -13,13 +13,19 @@ Base = declarative_base()
 class ImageDB(Base):
     __tablename__ = 'images'
 
-    album_id = Column(sqla.Integer, primary_key=True)
-    image_id = Column(sqla.Integer, primary_key=True)
+    id = Column(sqla.Integer(), primary_key=True, autoincrement=True)
+    album_id = Column(sqla.Integer)
+    album_position = Column(sqla.Integer)
+    image_id = Column(sqla.Integer)
     author_id = Column(sqla.Integer)
     author_name = Column(sqla.String(512))
     likes_count = Column(sqla.Integer)
     url = Column(sqla.String(2048))  # image url
     path = Column(sqla.String(2048))  # file path
+
+    __table_args__ = (
+        sqla.UniqueConstraint('album_id', 'image_id', name='unique_image'),
+    )
 
 
 @click.command()

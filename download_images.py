@@ -57,6 +57,7 @@ def images_generator(
 
         yield ImageDB(
             album_id=album_id,
+            album_position=i,
             image_id=image_id,
             author_id=user_id,
             author_name=user_name,
