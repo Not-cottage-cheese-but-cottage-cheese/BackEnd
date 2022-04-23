@@ -9,6 +9,7 @@ from explore_images import (
     next_image_in_album,
     get_first_image_in_album as get_first_image_in_album_from_db,
 )
+from explore_images_v2 import next_image
 from settings import settings
 
 app = FastAPI(
@@ -90,7 +91,7 @@ def get_first_image_in_album(
     tags=['20'],
 )
 def like_image(
-    id: int
+    id: int = Query(..., description='ID изображения')
 ) -> dict:
     next_id = next_image_in_album(id)
 
@@ -125,7 +126,7 @@ def like_image(
     tags=['20'],
 )
 def skip_image(
-    id: int
+    id: int = Query(..., description='ID изображения')
 ) -> dict:
     next_id = next_image_in_album(id)
 
@@ -134,6 +135,59 @@ def skip_image(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='Такого изображения нет в базе.'
         )
+
+    with DBSession() as session:
+        return jsonable_encoder(
+            session
+            .query(ImageDB)
+            .where(ImageDB.id == next_id)
+            .first()
+        )
+
+
+@app.get(
+    path='/api/like_image_v2',
+    description='Лайкает изображение и возвращает следующее случайное изображение',
+    tags=['30'],
+)
+def like_image_v2(
+    id: int = Query(..., description='ID изображения'),
+    favourite_id: int = Query(..., description='ID изображения "фаворита"'),
+) -> dict:
+    next_id = next_image(favourite_id=favourite_id, id=id)
+
+    with DBSession() as session:
+        image: ImageDB = (
+            session
+            .query(ImageDB)
+            .where(ImageDB.id == id)
+            .first()
+        )
+        image.likes_count += 1
+        session.flush()
+        session.commit()
+
+        return jsonable_encoder(
+            session
+            .query(ImageDB)
+            .where(ImageDB.id == next_id)
+            .first()
+        )
+
+
+@app.get(
+    path='/api/skip_image_v2',
+    description='Возвращает следующее случайное изображение',
+    tags=['30'],
+)
+def skip_image_v2(
+    id: int = Query(-1, description='ID изображения (-1 получения случайного изображения)'),
+    favourite_id: int = Query(..., description='ID изображения "фаворита"'),
+) -> dict:
+    next_id = next_image(
+        favourite_id=favourite_id,
+        id=id,
+    )
 
     with DBSession() as session:
         return jsonable_encoder(
