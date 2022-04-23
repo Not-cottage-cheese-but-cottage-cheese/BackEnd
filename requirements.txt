@@ -1,0 +1,4 @@
+requests==2.27.1
+fastapi[all]==0.75.2
+sqlalchemy==1.4.35
+click==8.1.2
