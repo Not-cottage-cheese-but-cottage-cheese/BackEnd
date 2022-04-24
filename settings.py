@@ -5,6 +5,8 @@ class Settings(BaseSettings):
     APP_ID: int = 8146243
     ACCESS_TOKEN: str = 'YOUR ACCESS TOKEN FROM .env FILE'
 
+    SECRET: str = 'secret'
+
     RELOAD: bool = False
 
     IMAGES_PATH = 'images'

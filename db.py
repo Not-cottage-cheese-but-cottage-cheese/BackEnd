@@ -22,6 +22,7 @@ class ImageDB(Base):
     likes_count = Column(sqla.Integer)
     url = Column(sqla.String(2048))  # image url
     path = Column(sqla.String(2048))  # file path
+    last_update = Column(sqla.DateTime)
 
     __table_args__ = (
         sqla.UniqueConstraint('album_id', 'image_id', name='unique_image'),

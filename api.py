@@ -1,5 +1,6 @@
 import uvicorn
 import traceback
+from datetime import datetime
 from fastapi import FastAPI, Query, HTTPException, status
 from fastapi.encoders import jsonable_encoder
 from starlette.middleware.cors import CORSMiddleware
@@ -109,6 +110,7 @@ def like_image(
             .first()
         )
         image.likes_count += 1
+        image.last_update = datetime.now()
         session.flush()
         session.commit()
 
@@ -164,6 +166,7 @@ def like_image_v2(
             .first()
         )
         image.likes_count += 1
+        image.last_update = datetime.now()
         session.flush()
         session.commit()
 
@@ -196,6 +199,45 @@ def skip_image_v2(
             .where(ImageDB.id == next_id)
             .first()
         )
+
+
+@app.get(
+    path='/api/print_dashboard',
+    description='Возвращает дашборд изображений',
+    tags=['50'],
+)
+def top_images(
+    n: int = Query(5, description='Количество изображений в топе'),
+    k: int = Query(5, description='Количество изображений в последних'),
+    secret: str = Query(
+        'secret',
+        description='Секрет для доступа к дашборду (по умолчанию "secret")'
+    )
+):
+    if secret != settings.SECRET:  # Yes, yes, not safe
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Invalid secret',
+        )
+
+    with DBSession() as session:
+        return {
+            'top': jsonable_encoder(
+                session
+                .query(ImageDB)
+                .order_by(ImageDB.likes_count.desc())
+                .limit(n)
+                .all()
+            ),
+            'last': jsonable_encoder(
+                session
+                .query(ImageDB)
+                .order_by(ImageDB.last_update.desc())
+                .where(ImageDB.last_update.isnot(None))
+                .limit(k)
+                .all()
+            )
+        }
 
 
 if __name__ == '__main__':

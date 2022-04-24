@@ -1,5 +1,6 @@
 import random
 import click
+from datetime import datetime
 from sqlalchemy.sql import text
 from db import DBSession, ImageDB
 
@@ -111,6 +112,7 @@ def main(album_id: int):
             match command:
                 case 'like':
                     image.likes_count += 1
+                    image.last_update = datetime.now()
                     session.flush()
                     session.commit()
                 case 'skip':

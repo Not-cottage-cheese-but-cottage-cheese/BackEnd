@@ -1,4 +1,5 @@
 import click
+from datetime import datetime
 from sqlalchemy.sql import text
 from db import DBSession, ImageDB
 from explore_images import question_generator
@@ -80,6 +81,7 @@ def main():
             match command:
                 case 'like':
                     image.likes_count += 1
+                    image.last_update = datetime.now()
                     session.flush()
                     session.commit()
                 case 'skip':
