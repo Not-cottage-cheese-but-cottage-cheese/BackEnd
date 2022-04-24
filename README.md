@@ -14,7 +14,7 @@ pip install -r requirements.txt
 python db.py
 ```
 
-Для выполнения команд, подразумевающих использование VK api, необходимо создать `.env` файл в корне проекта с access токеном пользователя:
+Для выполнения команд, подразумевающих использование VK api, необходимо создать `.env` файл в корне проекта с access токеном пользователя [(гайд по получению)](https://www.pandoge.com/socialnye-seti-i-messendzhery/poluchenie-klyucha-dostupa-access_token-dlya-api-vkontakte):
 
 ```env
 # .env
